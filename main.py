@@ -8,7 +8,7 @@ rho = 1.225                                     # air density (kg/m^3)
 Cd = 0.47                                       # sphere's drag force 
 radius = 0.2                                    # given by professor (m)
 density = 7800                                  # iron density (kg/m^3)
-mass = (4/3*m.pi*(radius**3))*density     # m = radius * density
+mass = (4/3*m.pi*(radius**3))*density           # m = radius * density
 gravity = 9.8                                   # gravity acceleration (m/s^2)
 
 area = m.pi * (radius**2)                       # cross-sectional area (m^2)
@@ -18,21 +18,45 @@ wind_drag = 0.5 * rho * Cd * area               # wind drag coefficient
 # Coding constant
 scr_wid = 1000
 scr_hei = 800
-cannon_pos = [-400,-300]
+
+
+# Physics
+
+class Physic():
+    def __init__(self):
+        self.dt = 0.01
+
+    def calculate_position(self, vx, vy, x,y):
+        ax = - (wind_drag / mass) * vx
+        ay = -gravity - (wind_drag / mass) * vy
+
+        vx += ax * self.dt
+        vy += ay * self.dt
+
+        x += vx * self.dt
+        y += vy * self.dt
+
+        return vx, vy, x, y
+
 
 # Making Cannon 
 class Cannon(t.Turtle):
-    def __init__(self,position):  # Setting First
+    def __init__(self):  # Setting First
         super().__init__()
         self.hideturtle()
-        self.cannon_circle(position)
-        self.pedestal(position)
+        self.cannon_pos = [-400,-300]
+        self.angle = 0
+
+        screen.listen()
+        screen.onkey(self.increase_angle, "Up")
+        screen.onkey(self.decrease_angle, "Down")
+        screen.onkey(self.fire, "space")
         
     def pedestal(self,position):
         self.penup()
         self.fillcolor("gray")
         self.pencolor("black")
-        self.goto(position)
+        self.goto(position[0],position[1])
         self.pendown()
         self.setheading(0)
         self.begin_fill()
@@ -53,14 +77,16 @@ class Cannon(t.Turtle):
         self.dot(50)
         self.end_fill()
 
-    def launcher(self,position,length,ang):
+    def launcher(self,length=60):
+        self.clear()
+        self.cannon_circle(self.cannon_pos)
         self.color("gray")
-        self.goto(position[0]+10, position[1]+40)
-        if ang%360 < -33:
-            ang = -32
-        elif ang%360 > 213:
-            ang = 212
-        self.setheading(ang-90)
+        self.goto(self.cannon_pos[0]+10, self.cannon_pos[1]+40)
+        if 270 < self.angle % 360 < 328:
+            self.angle = 327
+        elif 213 < self.angle % 360 < 270:
+            self.angle = 212
+        self.setheading(self.angle-90)
         self.begin_fill()
         for _ in range(2):
             self.forward(10)
@@ -69,8 +95,8 @@ class Cannon(t.Turtle):
             self.left(90)
             self.forward(10)
         self.end_fill()
-        self.pedestal(position)
-        self.arrow(position,length,ang)
+        self.pedestal(self.cannon_pos)
+        self.arrow(self.cannon_pos,length,self.angle)
 
     def arrow(self,position,length,ang):
         self.penup()
@@ -89,6 +115,41 @@ class Cannon(t.Turtle):
         self.forward(10)
         self.penup()
         self.pensize(1)
+
+    def increase_angle(self):
+        self.angle += 5
+        self.launcher()
+    
+    def decrease_angle(self):
+        self.angle -= 5
+        self.launcher()
+
+    def fire(self):
+            ball = Cannon_ball()
+            ball.launch()
+
+
+# Cannon Ball
+class Cannon_ball(t.Turtle):
+    def __init__(self):
+        super().__init__()
+        self.position = cannon.cannon_pos
+        self.shape("circle")
+        self.color("red")
+        self.penup()
+        self.goto(self.position[0] + 10, self.position[1] + 40)
+        self.vx = 100 * m.cos(m.radians(cannon.angle))
+        self.vy = 100 * m.sin(m.radians(cannon.angle))
+        self.physic = Physic()
+
+    def launch(self):
+        while True:
+            self.vx, self.vy, x, y = self.physic.calculate_position(self.vx, self.vy, self.xcor(), self.ycor())
+            self.goto(x, y)
+            if self.ycor() <= -300:
+                self.hideturtle()
+                break
+            screen.update()
 
 
 # Background
@@ -129,10 +190,24 @@ class Background(t.Turtle):
 
 # Bricks
 class Bricks(t.Turtle):
-    def __init__(self,sx,sy):
-        self.width = 30
-        self.height = 10
-        
+    def __init__(self,brick):
+        super().__init__()
+        self.width = 80
+        self.height = 40
+        self.hideturtle()
+        self.penup()
+        self.pencolor("black")
+        self.fillcolor("gray")
+        self.goto(brick[0]+self.width/2,brick[1]+self.height/2)
+        self.begin_fill()
+        self.setheading(180)
+        self.pendown()
+        for _ in range(2):
+            self.forward(self.width)
+            self.left(90)
+            self.forward(self.height)
+            self.left(90)
+        self.end_fill()
 
 
 # Screen Setting
@@ -141,8 +216,11 @@ screen.setup(scr_wid,scr_hei)
 screen.title("Cannon - Brick")
 screen.tracer(0)
 
-Background()
-cannon = Cannon(cannon_pos)
-cannon.launcher(cannon_pos,60,30)
 
-screen.update()
+# Game Start
+Background()
+cannon = Cannon()
+cannon.launcher()
+brick1 = Bricks([100,-280])                               #-280 is ground of brick
+
+screen.mainloop()
