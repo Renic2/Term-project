@@ -5,6 +5,7 @@ import time
 
 # Coding constant
 scr = (1000,800)
+score = 0
 screen = t.Screen()
 screen.setup(scr[0],scr[1])
 screen.title("Term-Project: Cannon-Brick")
@@ -55,20 +56,6 @@ class Physic():
         return self.position
         # 공 내부에 정보 저장과 동시에 값을 출력
 
-    def crash_ball(self, ball_pos, brick_pos): # 충돌 판정
-        self.near_x = max(brick_pos[0]+brick_pos[2]/2, min(ball_pos[0], brick_pos[0]-brick_pos[2]))
-        self.near_y = max(brick_pos[1]+brick_pos[3]/2, min(ball_pos[1], brick_pos[1]-brick_pos[3]))
-        # brick_pos = (x,y,width,height), ball_pos = (x,y)
-
-        self.distance = m.sqrt((self.near_x - ball_pos[0])**2+(self.near_y - ball_pos[1])**2)
-        # 공과 벽돌 사이의 거리를 공에 저장
-
-        if self.distance <= self.radius:
-            self.crash = True
-        else:
-            self.crash = False
-        # 충돌 여부를 저장
-
 '''
 Cannon ->   대포 생성 (받침대, 포신)
             Input = Cannon_Position / Output = Graphics
@@ -80,6 +67,7 @@ class Cannon(t.Turtle):
         super().__init__()
         self.cannon_pos = position # (x, y)
         self.angle = 0 # 초기 위치와 각도 설정
+        self.ball_fired = False
 
         screen.listen()
         screen.onkey(self.increase_angle, "Up")
@@ -156,8 +144,13 @@ class Cannon(t.Turtle):
         self.Cannon()
 
     def fire(self):
+        if not self.ball_fired:  # 공이 이미 발사되지 않았을 때만 실행
+            self.ball_fired = True
             ball = Cannon_ball()
             ball.launch()
+
+    def reset_fire(self):  # 공의 발사 상태 초기화
+        self.ball_fired = False
 
 '''
 Cannon Ball  -> Cannon 클래스에서 fire를 통해 제어
@@ -183,7 +176,7 @@ class Cannon_ball(t.Turtle):
         self.dot(20)  # 크기 20으로 설정
         self.physic = Physic()
 
-    def launch(self):
+    def launch(self): 
         while True:
             self.clear()
             self.location = self.physic.cal_pos(self.location[0], 
@@ -197,9 +190,24 @@ class Cannon_ball(t.Turtle):
             if self.ycor() <= -292 or self.xcor() > scr[0] // 2 or self.xcor() < -scr[0] // 2:
                 time.sleep(0.2)
                 self.clear()
+                cannon.reset_fire()
                 break
 
             screen.update()
+
+    def crash_ball(self, ball_pos, brick_pos): # 충돌 판정
+        self.near_x = max(brick_pos[0]+brick_pos[2]/2, min(ball_pos[0], brick_pos[0]-brick_pos[2]))
+        self.near_y = max(brick_pos[1]+brick_pos[3]/2, min(ball_pos[1], brick_pos[1]-brick_pos[3]))
+        # brick_pos = (x,y,width,height), ball_pos = (x,y)
+
+        self.distance = m.sqrt((self.near_x - ball_pos[0])**2+(self.near_y - ball_pos[1])**2)
+        # 공과 벽돌 사이의 거리를 공에 저장
+
+        if self.distance <= 20: # 거리와 반지름 비교
+            self.crash = True
+        else:
+            self.crash = False
+        # 충돌 여부를 저장
 
 # Background >> 개선 예정 
 class Background(t.Turtle):
@@ -236,9 +244,51 @@ class Background(t.Turtle):
         self.draw_back(turtle_obj,turtle_height)
         turtle_obj.end_fill()
 
+# Bricks
+class Bricks(t.Turtle):
+    def __init__(self,brick):
+        super().__init__()
+        self.width = 80
+        self.height = 40
+        self.brickcor = brick
+        self.hideturtle()
+        self.penup()
+        self.pencolor("black")
+        self.fillcolor("gray")
+        self.goto(self.brickcor[0]+self.width/2,self.brickcor[1]+self.height/2)
+        self.begin_fill()
+        self.setheading(180)
+        self.pendown()
+        for _ in range(2):
+            self.forward(self.width)
+            self.left(90)
+            self.forward(self.height)
+            self.left(90)
+        self.end_fill()
+
+    def disable(self):
+        if Cannon_ball.crash == True: # 충돌
+            self.clear()
+            score += 1
+
+
+class info(t.Turtle):
+    def __init__(self):
+        self.penup()
+        self.hideturtle()
+        self.goto(-400,200)
+        self.pendown()
+
+    def info_output(self,velocity,distance):
+        self.write(f"vx: {velocity[0]}, vy: {velocity[1]}, distance: {distance}",align="left",font=("Arial",16,"normal"))
+        #t.write("안녕 파이썬", move=False, align="center", font=("arial",50,"bold"))
+
 # Game Start
 Background()
 cannon = Cannon((-400,-300))
 cannon.Cannon()
+list = [(200,-300),(300,-300),(400,-300)]
+
+
 
 screen.mainloop()
