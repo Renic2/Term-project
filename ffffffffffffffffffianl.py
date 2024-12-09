@@ -1,13 +1,13 @@
-import turtle as t
-import math as m
-import random as r
+## Term - Project :: Cannon - Brick game
+
+import turtle as t, math as m, random as r      # Required Library
 
 # Constants
 scr = (1000, 800)
 rho = 1.225  # air density [kg/m^3]
 Cd = 0.47    # drag coefficient for sphere
 radius = 0.2 # sphere radius [m]
-density = 7800  # iron density [kg/m^3]
+density = 100  # iron density [kg/m^3]
 gravity = 9.8  # gravity [m/s^2]
 
 mass = (4/3) * m.pi * (radius**3) * density
@@ -218,9 +218,8 @@ class Physic:
         self.dt = 0.01
 
     def get_acceleration(self, vx, vy):
-        speed = m.sqrt(vx**2 + vy**2)
-        ax = -(drag_coefficient * speed * vx) / mass
-        ay = -(drag_coefficient * speed * vy) / mass - gravity
+        ax = -(drag_coefficient * vx) / mass
+        ay = -(drag_coefficient * vy) / mass - gravity
         return ax, ay
 
     def cal_pos(self, vx, vy, x, y):
