@@ -209,6 +209,8 @@ class Cannon_ball(t.Turtle):
             self.crash = False
         # 충돌 여부를 저장
 
+        return self.distance, self.crash
+
 # Background >> 개선 예정 
 class Background(t.Turtle):
     def __init__(self):
@@ -272,23 +274,11 @@ class Bricks(t.Turtle):
             score += 1
 
 
-class info(t.Turtle):
-    def __init__(self):
-        self.penup()
-        self.hideturtle()
-        self.goto(-400,200)
-        self.pendown()
-
-    def info_output(self,velocity,distance):
-        self.write(f"vx: {velocity[0]}, vy: {velocity[1]}, distance: {distance}",align="left",font=("Arial",16,"normal"))
-        #t.write("안녕 파이썬", move=False, align="center", font=("arial",50,"bold"))
-
 # Game Start
 Background()
 cannon = Cannon((-400,-300))
 cannon.Cannon()
-list = [(200,-300),(300,-300),(400,-300)]
+list = []
 
 
-
-screen.mainloop()
+screen.mainloop() 
