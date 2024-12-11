@@ -7,7 +7,7 @@ scr = (1000, 800)
 rho = 1.225  # air density [kg/m^3]
 Cd = 0.47    # drag coefficient for sphere
 radius = 0.2 # sphere radius [m]
-density = 100  # iron density [kg/m^3]
+density = 1000  # [kg/m^3]
 gravity = 9.8  # gravity [m/s^2]
 
 mass = (4/3) * m.pi * (radius**3) * density
@@ -165,8 +165,8 @@ class CannonBall(t.Turtle):
         self.manager = manager  
         self.speed_x = self.v0 * m.cos(self.angle)
         self.speed_y = self.v0 * m.sin(self.angle)
-        self.x = position[0] + 30
-        self.y = position[1] + 70
+        self.x = position[0] + 10 + 60 * m.cos(self.angle)
+        self.y = position[1] + 35 + 60 * m.sin(self.angle)
         self.physic = Physic()
 
         self.hideturtle()
@@ -218,8 +218,12 @@ class Physic:
         self.dt = 0.01
 
     def get_acceleration(self, vx, vy):
-        ax = -(drag_coefficient * vx) / mass
-        ay = -(drag_coefficient * vy) / mass - gravity
+        v = m.sqrt(vx**2 + vy**2)
+        if v == 0:
+            ax, ay = 0, -gravity
+        else:
+            ax = -(drag_coefficient * v * vx) / mass
+            ay = -(drag_coefficient * v * vy) / mass - gravity
         return ax, ay
 
     def cal_pos(self, vx, vy, x, y):
@@ -380,7 +384,7 @@ class GameManager:
         end_message.hideturtle()
         end_message.penup()
         end_message.goto(0, 0)
-        end_message.write(f"Game Over!\nFinal Score: {self.score}", align="center", font=("Arial", 24, "bold"))
+        end_message.write(f"게임 종료!\n당신의 점수는: {self.score}", align="center", font=("Arial", 24, "bold"))
         screen.update()
 
 # Main program
