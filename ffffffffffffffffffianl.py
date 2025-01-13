@@ -159,7 +159,7 @@ class Brick(t.Turtle):
 class CannonBall(t.Turtle):
     def __init__(self, angle, position, manager):
         super().__init__()
-        self.v0 = 100
+        self.v0 = 200
         self.angle = m.radians(angle)
         self.position = position
         self.manager = manager  
